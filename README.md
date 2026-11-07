@@ -159,6 +159,59 @@ Body for step 4:
  "hash": "<HMAC-SHA256(rfc_input, RFC_PASSWORD)>"}
 ```
 
+## Second pass, 2026-11-07
+
+Re-run from a fresh checkout against a locally started service, original
+`register_api_route()` dispatcher, real `helpers.settings`. Raw output in
+`evidence/e2e-four-link-chain.log`.
+
+```
+[1/4] GET /api/csrf_token      -> csrf_token = CAN3PejWtRC7EIMgstxpoB7G35T5N81hV6zDxVZEp2g
+[2/4] POST /api/settings_get   -> mcp_server_token = gffytvvgDV-Pyr07
+[3/4] POST /api/api_files_get  -> /etc/passwd, 3296 bytes, real content
+[4/4] POST /api/rfc            -> HTTP 200  "uid=0(root) gid=0(root) groups=0(root)"
+```
+
+This pass also corrected one claim from the first write-up. `convert_out` does **not**
+drop `mcp_server_token`; it emits it in cleartext while masking `rfc_password`:
+
+```
+real token : 'gffytvvgDV-Pyr07'
+sent token : 'gffytvvgDV-Pyr07'
+EQUAL: True
+rfc sent   : '****PSWD****'
+PASSWORD_PLACEHOLDER = '****PSWD****'
+```
+
+A masking mechanism exists and covers the password-shaped fields. The API key is simply
+not on the list. That is the more useful framing for a fix: the question is not "add
+masking" but "why does the mask list enumerate fields instead of defaulting to deny".
+
+`create_auth_token()` at `helpers/settings.py:851` is deterministic —
+`sha256(f"{persistent_runtime_id}:{AUTH_LOGIN}:{AUTH_PASSWORD}")[:16]` — so the value is
+stable across restarts for a given instance. It is not globally predictable: the runtime id
+comes from `secrets.token_hex(16)` and is persisted per instance, and the 16-char token is
+96 bits. No base-image value is baked in, so this is not a fleet-wide constant.
+
+## Evidence
+
+`evidence/` is sealed with content-addressed blobs; `MANIFEST.json` records a sha256 per
+source file and `MANIFEST.json.sha256` pins the manifest itself.
+
+```
+MANIFEST.json sha256 = 32c0143ce476d24b3bd5df01695b0d0f40b1fac55c2837c95f65f22dc08dccab
+```
+
+To check that the log is the one this report was written from:
+
+```bash
+python3 tools/seal_evidence.py --verify evidence
+```
+
+It recomputes every source and blob hash, flags files that appeared after sealing, and
+refuses a manifest that no longer covers the directory. Exit code 0 means the evidence is
+byte-identical to what was sealed.
+
 ## Reproduction
 
 ```bash
